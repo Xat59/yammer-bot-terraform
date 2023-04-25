@@ -1,0 +1,4 @@
+[yammer]
+api_endpoint = https://www.yammer.com/api/v1/messages.json
+access_token = <REPLACE_WITH_YAMMER_TOKEN>
+group_id = <REPLACE_WITH_YAMMER_GROUP_IDENTIFIER>
