@@ -6,6 +6,7 @@ from urllib.parse import urlparse
 import configparser
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
+import os
 
 def get_url(url, params=None):
     """This function makes a GET request to the given URL and returns the full response."""
@@ -67,3 +68,21 @@ def get_remaining_time(date):
         return remaining_time
     except:
         return None
+
+def create_db_file(filename):
+    """Create the db/<filename>.db that contains already published items."""
+    try:
+        # Set the filename location
+        filename = 'db/'+ filename + '.db'
+
+        # Create the db directory if it doesn't exist
+        if not os.path.exists('db'):
+            os.makedirs('db')
+
+        # Check if the file exists
+        if not os.path.exists(filename):
+            # Create the file if it doesn't exist
+            open(filename, 'w').close()
+    except:
+        print('Cannot create DB file: db/' + filename + '.db')
+        sys.exit()

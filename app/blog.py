@@ -4,6 +4,9 @@ import feedparser
 import requests
 from utils import *
 
+# Init the github.db DB file
+create_db_file('blog')
+
 # Set the RSS feed URL and load Yammer configuration
 rss_url = 'https://www.hashicorp.com/blog/products/terraform/feed.xml'
 yammer_cfg = load_yammer_config()

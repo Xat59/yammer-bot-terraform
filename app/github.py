@@ -5,6 +5,9 @@ from urllib.parse import urlparse
 import sys
 from utils import *
 
+# Init the github.db DB file
+create_db_file('github')
+
 # Load Yammer configuration
 yammer_cfg = load_yammer_config()
 
