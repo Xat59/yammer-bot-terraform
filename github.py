@@ -48,39 +48,40 @@ for repo in repos:
         url = 'https://api.github.com/repos/hashicorp/' + repo['name'] + '/releases'
         response = get_url(url)
         
-        # Parse the JSON response
-        releases = json.loads(response.text)
+        # If the response is a 2XX,
+        # list releases for the current repo and notify.
+        if response is not None:
+            releases = json.loads(response.text)
 
-	    # Loop through each release
-        for release in releases:
-            # Check if the release has already been published
-            if release['html_url'] in published_github:
-                print('Item already published:', release['html_url'])
-                continue
+            for release in releases:
+                # Check if the release has already been published
+                if release['html_url'] in published_github:
+                    print('Item already published:', release['html_url'])
+                    continue
 
-            # Get provider name
-            provider_name = urlparse(url).path.split('/')[3]
+                # Get terraform provider name
+                provider_name = urlparse(url).path.split('/')[3]
 
-            # Construct the message to post to Yammer
-            message = {
-                'body': provider_name + ' provider: new release ' + release['tag_name'],
-                'og_url': release['html_url'],
-                'group_id': yammer_cfg['group_id']
-            }
+                # Construct the message to post to Yammer
+                message = {
+                    'body': provider_name + ' provider: new release ' + release['tag_name'],
+                    'og_url': release['html_url'],
+                    'group_id': yammer_cfg['group_id']
+                }
 
-            # Set the Yammer API request headers
-            headers = {'Authorization': 'Bearer ' + yammer_cfg['access_token']}
-
-            # Make the Yammer API request to post the message
-            response = requests.post(yammer_cfg['api_endpoint'], headers=headers, json=message)
+                # Set the Yammer API request headers and make request.
+                headers = {'Authorization': 'Bearer ' + yammer_cfg['access_token']}
+                response = requests.post(yammer_cfg['api_endpoint'], headers=headers, json=message)
             
-            # Print the response status code to the console
-            print('Yammer API response status code: ' + str(response.status_code))
+                # Add the article ID to the set of published articles,
+                # and print the return code.
+                print('Yammer API response for:', release['html_url'], ':', str(response.status_code))
+                if str(response.status_code) == '201':
+                    published_github.add(release['html_url'])
 
-            # Add the article ID to the set of published articles
-            if str(response.status_code) == '201':
-                published_github.add(release['html_url'])
-
-        # Save the updated set of published article IDs to the file
-        with open('github.db', 'w') as f:
-            f.write('\n'.join(published_github))
+            # Save the updated set of published article IDs to the file
+            with open('github.db', 'w') as f:
+                f.write('\n'.join(published_github))
+        # If the response is not a 2XX, quit.
+        else:
+            sys.exit()
