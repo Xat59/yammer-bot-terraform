@@ -4,6 +4,8 @@ import requests
 from datetime import datetime
 from urllib.parse import urlparse
 import configparser
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
 
 def get_url(url, params=None):
     """This function makes a GET request to the given URL and returns the full response."""
@@ -17,7 +19,7 @@ def get_url(url, params=None):
         if urlparse(url).hostname == "api.github.com":
             print("More details:")
             print("  Remaining requests:   ", response.headers['X-RateLimit-Remaining'], "/", response.headers['X-RateLimit-Limit'])
-            print("  Rate limit expiration:", str(datetime.fromtimestamp(int(response.headers['X-RateLimit-Reset']))))
+            print("  Rate limit expiration:", str(datetime.fromtimestamp(int(response.headers['X-RateLimit-Reset']))), "(", get_remaining_time(datetime.fromtimestamp(int(response.headers['X-RateLimit-Reset']))), ")")
         return None
 
 def load_yammer_config():
@@ -36,3 +38,32 @@ def load_yammer_config():
     except (configparser.NoOptionError, configparser.NoSectionError) as e:
         print(f"Error: {e}")
         raise SystemExit(1)
+
+def get_remaining_time(date):
+    """Get the remaining time to reach the provided date in human readable format."""
+    try:
+        # Current time
+        now = datetime.now()
+
+        # Time difference
+        time_difference = relativedelta(date, now)
+
+        # Construct the remaining time string
+        remaining_time = ""
+        if time_difference.years > 0:
+            remaining_time = remaining_time + str(time_difference.years) + " years, "
+        if time_difference.months > 0:
+            remaining_time = remaining_time + str(time_difference.months) + " months, "
+        if time_difference.days > 0:
+            remaining_time = remaining_time + str(time_difference.days) + " days, "
+        if time_difference.hours > 0:
+            remaining_time = remaining_time + str(time_difference.hours) + " hours, "
+        if time_difference.minutes > 0:
+            remaining_time = remaining_time + str(time_difference.minutes) + " minutes, "
+        if time_difference.seconds > 0:
+            remaining_time = remaining_time + str(time_difference.seconds) + " seconds"
+        
+        # Return the time difference in human-readable format
+        return remaining_time
+    except:
+        return None
