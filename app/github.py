@@ -9,7 +9,7 @@ from utils import *
 yammer_cfg = load_yammer_config()
 
 # Load the stored release from a file
-with open('github.db', 'r') as f:
+with open('db/github.db', 'r') as f:
     published_github = set(f.read().splitlines())
 
 # Init the empty list of repo and Set the URL, parameters for the GitHub API
@@ -80,7 +80,7 @@ for repo in repos:
                     published_github.add(release['html_url'])
 
             # Save the updated set of published article IDs to the file
-            with open('github.db', 'w') as f:
+            with open('db/github.db', 'w') as f:
                 f.write('\n'.join(published_github))
         # If the response is not a 2XX, quit.
         else:

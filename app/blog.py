@@ -9,7 +9,7 @@ rss_url = 'https://www.hashicorp.com/blog/products/terraform/feed.xml'
 yammer_cfg = load_yammer_config()
 
 # Load the stored blog article IDs from a file
-with open('blog.db', 'r') as f:
+with open('db/blog.db', 'r') as f:
     published_blog = set(f.read().splitlines())
 
 # Parse the RSS feed
@@ -46,5 +46,5 @@ for item in sorted_items:
         published_blog.add(item['id'])
 
 # Save the updated set of published article IDs to the file
-with open('blog.db', 'w') as f:
+with open('db/blog.db', 'w') as f:
     f.write('\n'.join(published_blog))
