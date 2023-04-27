@@ -10,6 +10,7 @@ create_db_file('github')
 
 # Load Yammer configuration
 yammer_cfg = load_yammer_config()
+github_cfg = load_github_config()
 
 # Load the stored release from a file
 with open('db/github.db', 'r') as f:
@@ -20,11 +21,22 @@ u = 'https://api.github.com/orgs/hashicorp/repos'
 page = 1
 repos = []
 
+# Set GitHub headers when using GitHub access token weither we have an access token or not.
+if github_cfg is not None and github_cfg['access_token']:
+    headers = {
+        "Authorization": f"Bearer {github_cfg['access_token']}",
+        "Accept": "application/vnd.github.v3+json"
+    }
+else:
+    headers = {
+        "Accept": "application/vnd.github.v3+json"
+    }
+
 # Loop through the paginated results until all repositories have been retrieved
 while True:
     # Send a GET request to the API for the current page of repositories
     params = {'per_page': 100, 'page': page}
-    response = get_url(u, params=params)
+    response = get_url(u, params=params, headers=headers)
 
     # If the response is a 2XX,
     # check if there are no more pages of repositories
@@ -49,7 +61,7 @@ for repo in repos:
 
         # Send a GET request to the API
         url = 'https://api.github.com/repos/hashicorp/' + repo['name'] + '/releases'
-        response = get_url(url)
+        response = get_url(url, headers=headers)
         
         # If the response is a 2XX,
         # list releases for the current repo and notify.
