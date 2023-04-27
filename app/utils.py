@@ -8,10 +8,10 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 import os
 
-def get_url(url, params=None):
+def get_url(url, params=None, headers=None):
     """This function makes a GET request to the given URL and returns the full response."""
     try:
-        response = requests.get(url, params=params)
+        response = requests.get(url, params=params, headers=headers)
         response.raise_for_status()
         return response
     except requests.exceptions.RequestException as e:
@@ -39,6 +39,23 @@ def load_yammer_config():
     except (configparser.NoOptionError, configparser.NoSectionError) as e:
         print(f"Error: {e}")
         raise SystemExit(1)
+
+def load_github_config():
+    """Get GitHub configuration from config.ini file."""
+    try:
+        parser = configparser.ConfigParser()
+        parser.read('config.ini')
+
+        config = {
+            'access_token': parser.get('github', 'access_token')
+        }
+
+        # Return the GitHub config and print we will use an access token.
+        print(f"Using authenticated GitHub user.")
+        return config
+    except (configparser.NoOptionError, configparser.NoSectionError) as e:
+        print(f"Using anonymous GitHub user: no GitHub access token found in config.ini file.")
+        return None
 
 def get_remaining_time(date):
     """Get the remaining time to reach the provided date in human readable format."""

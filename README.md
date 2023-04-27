@@ -45,11 +45,15 @@ The `config.ini` file looks like the following, please replace with your own inf
 api_endpoint = https://www.yammer.com/api/v1/messages.json
 access_token = <REPLACE_WITH_YAMMER_TOKEN>
 group_id = <REPLACE_WITH_YAMMER_GROUP_IDENTIFIER>
+
+; [github]
+; access_token = <REPLACE_WITH_GITHUB_TOKEN>
 ```
 
 - `yammer.api_endpoint`: if you really need to change you Yammer API endpoint, feel free to change it.
 - `yammer.access_token`: the Yammer access token allows the app to push information in your Yammer group.
 - `yammer.group_id`: the group identifier of your Yammer group you want to push information to.
+- `github.access_token` (optional): if you want to bypass GitHub rate limits of anonymous user (or for any other reason), please set your GitHub token.
 
 ### Usage with classic installation
 
@@ -83,7 +87,6 @@ docker run -v <CONFIG_PATH>:/config.ini -v <DB_PATH>:/db yammer-bot-terraform py
 
 ## Future improvments
 
-- provide a way to provide Github authentication to avoid Github API rate limits.
 - possibility to push information to any social network.
 - add new source of information (please create an issue).
 - on first run, do not push any information, but create the DB files instead.
