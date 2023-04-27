@@ -24,9 +24,17 @@ Use the `requirements.txt` file to install python packages locally:
 pip install -r requirements.txt
 ```
 
-### Docker installation
+### Docker installation/build
 
 A `Dockerfile` has been provided to run the app as container.
+
+If you want to build the image, please run the following:
+
+```bash
+docker build -t yammer-bot-terraform:latest .
+```
+
+If you want to run the app from the container, look at "Usage" section.
 
 ## Usage
 
@@ -74,13 +82,13 @@ To run the `github` app, execute the following:
 To run the `blog` app, execute the following:
 
 ```bash
-docker run -v <CONFIG_PATH>:/config.ini -v <DB_PATH>:/db yammer-bot-terraform python blog.py
+docker run -v <CONFIG_PATH>:/config.ini -v <DB_PATH>:/db xat59/yammer-bot-terraform python blog.py
 ```
 
 To run the `github` app, execute the following:
 
 ```bash
-docker run -v <CONFIG_PATH>:/config.ini -v <DB_PATH>:/db yammer-bot-terraform python github.py
+docker run -v <CONFIG_PATH>:/config.ini -v <DB_PATH>:/db xat59yammer-bot-terraform python github.py
 ```
 
 > **NOTE**: Make sure you have replaced `<CONFIG_PATH>` and `<DB_PATH>`
