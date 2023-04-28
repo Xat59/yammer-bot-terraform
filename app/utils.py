@@ -18,9 +18,10 @@ def get_url(url, params=None, headers=None):
         print("Error:", e)
         # Give more information when there are an error with api.github.com
         if urlparse(url).hostname == "api.github.com":
-            print("More details:")
-            print("  Remaining requests:   ", response.headers['X-RateLimit-Remaining'], "/", response.headers['X-RateLimit-Limit'])
-            print("  Rate limit expiration:", str(datetime.fromtimestamp(int(response.headers['X-RateLimit-Reset']))), "(", get_remaining_time(datetime.fromtimestamp(int(response.headers['X-RateLimit-Reset']))), ")")
+            if response.status_code == '403':
+                print("More details:")
+                print("  Remaining requests:   ", response.headers['X-RateLimit-Remaining'], "/", response.headers['X-RateLimit-Limit'])
+                print("  Rate limit expiration:", str(datetime.fromtimestamp(int(response.headers['X-RateLimit-Reset']))), "(", get_remaining_time(datetime.fromtimestamp(int(response.headers['X-RateLimit-Reset']))), ")")
         return None
 
 def load_yammer_config():
@@ -103,3 +104,21 @@ def create_db_file(filename):
     except:
         print('Cannot create DB file: db/' + filename + '.db')
         sys.exit()
+
+def post_yammer_message(message):
+    """Send a message to a Yammer group."""
+    
+    # Load Yammer configuration
+    yammer_cfg = load_yammer_config()
+
+    # Add the Yammer group in the request
+    message['group_id'] = yammer_cfg['group_id']
+
+    # Set the Yammer API request headers and make request.
+    headers = {'Authorization': 'Bearer ' + yammer_cfg['access_token']}
+    response = requests.post(yammer_cfg['api_endpoint'], headers=headers, json=message)
+
+    # Print Yammer API response.
+    # And return the response.
+    print('Yammer API response for:', message['og_url'], ':', str(response.status_code))
+    return response
