@@ -54,37 +54,46 @@ while True:
     else:
         sys.exit()
 
+# Loop through requested GitHub repo
+for repo in repos:
+    if repo['name'].startswith('terraform-provider-') and not repo['archived']:
+        print(repo['name'])
+        # When the repo does not have any release registered in DB yet.
+        # Build the DB file with the latest release for this repo.
+        if get_github_release_from_db(repo['name']) is None:
 
-# DB file is empty.
-# It means, that's the first time we run the script.
-if len(db) == 0:
-    for repo in repos:
-        if repo['name'].startswith('terraform-provider-') and not repo['archived']:
-            print(repo['name'])
-
-            # Get the latest release
+            # Get the latest release for the repo
             url = 'https://api.github.com/repos/hashicorp/' + repo['name'] + '/releases/latest'
             response = get_url(url, headers=headers)
 
-            # If there are a response content for the latest release of the repo
+            # If there are a response content when getting ALL releases
             if response is not None:
-                # print(response.text)
                 # Create a json object with the response content
                 latest_release = json.loads(response.text)
 
-                # Add the release URL to the DB file
+                # Add the latest release in the DB for this repo.
                 print(latest_release['html_url'], 'added to DB.')
                 db.add(latest_release['html_url'])
+                
+                # Save the DB file
+                with open('db/github.db', 'w') as f:
+                    f.write('\n'.join(db))
 
-    # Save the DB file with latest releases of all repos.
-    with open('db/github.db', 'w') as f:
-        f.write('\n'.join(db))
-# DB file is not empty.
-# It means the script has already ran at least once.
-elif len(db) > 0:
-    for repo in repos:
-        if repo['name'].startswith('terraform-provider-') and not repo['archived']:
-            print(repo['name'])
+        # When the repo already has any release registered in DB.
+        # If the registered release in DB is the latest,
+        #   that means we've already notified about it.
+        # If the registered release in DB is not the latest one,
+        #   that means we have to notify about release updates.
+        elif get_github_release_from_db(repo['name']) is not None:
+            # Get the release information for the repo that is already registered in DB
+            release_in_db_tag = get_github_release_from_db(repo['name'])
+            print('The current release registered in DB is', release_in_db_tag)
+            r = get_url('https://api.github.com/repos/hashicorp/' + repo['name'] + '/releases/tags/' + release_in_db_tag, headers=headers)
+            if r is not None:
+                release_in_db = json.loads(r.text)
+
+            # Initiate the list that contains releases to be published
+            releases_to_publish = []
 
             # Get all releases for the repo
             url = 'https://api.github.com/repos/hashicorp/' + repo['name'] + '/releases'
@@ -96,45 +105,43 @@ elif len(db) > 0:
                 all_releases = json.loads(response.text)
 
                 # Loop over all releases of the repo
-                # List of releases are already ordered by date
-                for index, release in enumerate(all_releases):
-                    # If the current release is already in the DB
-                    if release['html_url'] in db:
-                        # If current release is not the first one
-                        # It means there are newer release(s)
-                        if index > 0:
-                            # Remove the old one latest from the DB
-                            print(release['html_url'], 'removed from DB.')
-                            db.remove(release['html_url'])
-                            # Save the DB file
-                            with open('db/github.db', 'w') as f:
-                                f.write('\n'.join(db))
-                        # Go to the next repo.
-                        print(release['html_url'], "already been published. Go to the next repo.")
-                        break
-                    # The current release is not in the DB
-                    else:
-                        # Construct the message to post to Yammer group
-                        provider_name = urlparse(url).path.split('/')[3]
-                        message = {
-                            'body': provider_name + ' provider: new release ' + release['tag_name'],
-                            'og_url': release['html_url']
-                        }
-                        
-                        # Notify to Yammer group
-                        print("Notify:", release['html_url'])
-                        yammer_response = post_yammer_message(message)
+                # List of releases are ordered by date from the GitHub API response
+                for release in all_releases:
+                    if release['published_at'] > release_in_db['published_at']:
+                        provider_name = urlparse(release['html_url']).path.split('/')[2]
+                        releases_to_publish.append({
+                            'provider_name': provider_name,
+                            'html_url': release['html_url'],
+                            'tag_name': release['tag_name'],
+                            'published_at': release['published_at']
+                        })
 
-                        # If the message has been posted, we can update the DB file
-                        # to track the latest release posted for this repo.
-                        # We need to update the DB with the latest release.
-                        # If the current release is the first one from the list,
-                        # that means it is the latest release in the repo.
-                        # So write the release in the DB
-                        if yammer_response.status_code  == '201' and index == 0:
-                            # Add the latest release in the DB.
-                            print(release['html_url'], 'added to DB.')
-                            db.add(release['html_url'])
-                            # Save the DB file
-                            with open('db/github.db', 'w') as f:
-                                f.write('\n'.join(db))
+            releases_to_publish.reverse()
+            for index, release in enumerate(releases_to_publish):
+                if index == 0:
+                    release_to_delete = release_in_db['html_url']
+                else:
+                    release_to_delete = releases_to_publish[index - 1]['html_url']
+
+                # Construct the message to post to Yammer group
+                message = {
+                    'body': release['provider_name'] + ': new release ' + release['tag_name'],
+                    'og_url': release['html_url']
+                }
+                
+                # Notify to Yammer group
+                print("Notify:", release['html_url'])
+                yammer_response = post_yammer_message(message)
+
+                if yammer_response.status_code == 201:
+                    # Add this release in the DB.
+                    print(release['html_url'], 'added to DB.')
+                    db.add(release['html_url'])
+
+                    # Remove the old one latest from the DB
+                    print(release_in_db['html_url'], 'removed from DB.')
+                    db.remove(release_to_delete)
+
+                    # Save the DB file
+                    with open('db/github.db', 'w') as f:
+                        f.write('\n'.join(db))
