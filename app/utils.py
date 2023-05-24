@@ -7,6 +7,7 @@ import configparser
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 import os
+import sys
 
 def get_url(url, params=None, headers=None):
     """This function makes a GET request to the given URL and returns the full response."""
@@ -122,3 +123,21 @@ def post_yammer_message(message):
     # And return the response.
     print('Yammer API response for:', message['og_url'], ':', str(response.status_code))
     return response
+
+def get_github_release_from_db(repo_name):
+    """Retrieve the release that is actually in the DB file for a specific Github repository."""
+
+    repo_url = 'https://github.com/hashicorp/' + repo_name + '/'
+    try:
+        with open('db/github.db', 'r') as f:
+            for line in f:
+                # If we have a release for this repo in DB, just return its URL.
+                if repo_url in line:
+                    return urlparse(line).path.split('/')[5]
+
+        # No release has been found for this repo in the DB.
+        return None
+    except FileNotFoundError:
+        print('The file was not found.')
+    except IOError:
+        print('An error occurred while reading the file.')
