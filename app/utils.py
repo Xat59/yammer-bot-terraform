@@ -49,7 +49,8 @@ def load_github_config():
         parser.read('config.ini')
 
         config = {
-            'access_token': parser.get('github', 'access_token')
+            'access_token': parser.get('github', 'access_token'),
+            'ignore_providers': parser.get('github', 'ignore_providers').split()
         }
 
         # Return the GitHub config and print we will use an access token.
