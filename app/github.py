@@ -156,11 +156,11 @@ for repo in repos:
             
             # Identity the release to delete from the DB file
             release_to_delete = get_github_release_from_db(repo['name'])
-            release_to_delete = 'https://github.com/hashicorp/' + repo['name'] + '/releases/tag/' + release_to_delete
             
             # If the release exists in the DB file while the provider is marked to be ignored.
             # Remove the release from the DB file.
             if release_to_delete is not None:
+                release_to_delete = 'https://github.com/hashicorp/' + repo['name'] + '/releases/tag/' + release_to_delete
                 db.remove(release_to_delete)
 
                 # Save the DB file
