@@ -5,3 +5,4 @@ group_id = <REPLACE_WITH_YAMMER_GROUP_IDENTIFIER>
 
 ; [github]
 ; access_token = <REPLACE_WITH_GITHUB_TOKEN>
+; ignore_providers = terraform-provider-google-beta terraform-provider-google
